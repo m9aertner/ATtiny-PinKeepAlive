@@ -15,7 +15,7 @@
 #define BTN_IN         PIN_PB1 // Physical Pin 3
 #define TIMER0_COUNT        42 // Counter value of 42 gives about 100 msec timer interval
 #define KEEP_ALIVE_TICKS    50 // 1000 x 100ms = 100s until we flash briefly to keep the unit on its feet
-#define FLASH_TICKS          2 // 200ms flash is enough to alert the unit
+#define FLASH_TICKS          3 // 200ms flash is not enough to alert the unit, we need 300ms or more
 #define SHORT_PULSE_TICKS    4 // 400ms flash min duration for a button press
 
 volatile static bool ticked = false;
