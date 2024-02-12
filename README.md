@@ -38,9 +38,16 @@ This short flash once in a while simulates some activity to the power meter so i
 
 Consequently, the extended SML datagrams continue to be emitted. Mission accomplished.
 
+# Repeat PIN entry
+
+One reviewer suggested to enter the PIN again, regularly, to guard against unexpected meter resets and/or unexpected microcontroller resets.
+So, after about 20 minutes, the unit now waits for a bit longer than the keep-alive period (130s, extended wait period), then blinks in the PIN again.
+
 # What the heck?
 
 I still have not found the reason why anybody would want to configure away the option to emit extended datagrams permanently. What's the purpose?!
+
+While my unit is an [Easymeter Q3A](https://www.easymeter.com/downloads/products/zaehler/Q3A/BA_Q3A_V10.09_Rev19_2021-06-14.pdf), I believe there may be other types of meters with similar (stupid?) config options.
 
 # Caveats
 
@@ -48,6 +55,5 @@ I still have not found the reason why anybody would want to configure away the o
 - It might work with a series resistor to reach a lower current through the LED, but I have not yet tried that. By using a number of ATtiny ports in parallel it might be possible to get rid of the transistor, too.
 - The timing of this whole PIN entry scheme is not overly critical, but not certainly not fool-proof either. After all, it's intended for manual operation. Especially, the inter-digit delays may give you a problem. In this case, please adjust `DIGIT_GAP2_TICKS` in code and re-try.
 - If your meter happens to __not__ have a sticker preventing access to the MSB-DSS (IR transmitter/receiver, lucky you!), you want to check there first, as the MSB-DSS may well emit extended datagrams irrspectively of PIN entry status - that is, even without a PIN!
-- The PIN is communicated once only after the unit's start. Make sure to have a reset button available and/or cycle the power supply when you
-need to input the PIN repeatedly. Or change the code to detect some button press pattern.
 - Why ATtiny841? Well, that was the nearest unit I happened to find on my workbench. And it's got two hardware serial ports, which I may use eventually to read the SML and to forward that via wired RS485, eventually. Of course, any Arduino-like microcontroller with some form of periodic interrupt should work.
+- Note that during the last seconds of the extended wait period, plus the seconds it takes to re-enter the PIN, the meter will send out reduced datagrams again. Please ping me when you know a way around this.
