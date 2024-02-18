@@ -5,6 +5,7 @@
 
    Hardware:
    - PB0       White LED via BC557 PNP transistor, with 4K7 resistor to base, active LOW
+               To use an NPN transistor (active HIGH), define LED_ON and LED_OFF accordingly in meterpin.h
    - PB1       Push button against GND
 
    v0.2        February 2024
@@ -16,8 +17,10 @@
 static const char PIN[] = METER_PIN;
 
 #define LED_W          PIN_PB0 // Physical Pin 2
+#ifndef LED_ON
 #define LED_ON             LOW // LED is active LOW
 #define LED_OFF           HIGH
+#endif
 #define BTN_IN         PIN_PB1 // Physical Pin 3
 #define TIMER0_COUNT        46 // Counter value of 46 gives about 100 msec timer interval
 
