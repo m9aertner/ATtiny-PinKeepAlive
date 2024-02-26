@@ -2,12 +2,16 @@
 
 Flash in the PIN for my utility electricity meter via white LED, then keep the PIN active by flashing the LED briefly every 100 seconds.
 
+In parallel, read INFO-DSS SML datagrams via IR diode input, decode for a number of OBIS codes and expose the received values via Modbus RTU over a serial line, in my case RS-485.
+
 # Why?
 
 The electricity power meter supplied by my local power company came mis-configured so there's no way to enable extended INFO-DSS IR datagrams permanently.
 The respective menu item has been configured away. Thank you very much!
 
 After PIN entry, the extended datagrams do appear, but only for 120 seconds. After that, the unit falls back to basic datagrams again, requiring another PIN entry. Alternatively, we just simulate some activity so that the 120 second window does not close. By repeated light signals, we're keeping the unit in "extended" mode, so to say.
+
+Without the PIN, my meter emits 1.8.0 and 2.8.0 with kWh resolution only (xxx000 W) and does not emit instantaneous power at all. After PIN entry, all three values are emitted and with Watt granularity.
 
 # Manual operation
 
@@ -28,7 +32,7 @@ Then, for each of the (four) digits of the PIN,
 
 As we do not have any feedback from the meter (neither IR nor visual) we can do nothing but try and wait for a similar amount of time. Note this cannot be super reliable. If the period is set too short, we're bumping up the current digit too much and if we wait for too long we can skip a digit, causing one or more spurious 0 digits.
 
-The PIN is hard-coded in the source code / microcontroller. To define the PIN, copy file `meterpin-sample.h` to `meterpin.h` and adjust that copy to your PIN. Then build and upload.
+The PIN is hard-coded in the source code / microcontroller. To define the PIN, copy file `meterpin-sample.h` to `meterpin.h` and adjust that copy to your PIN. Then build and upload. Setting the PIN to an empty string disables PIN entry, leaving only the Modbus-RTU function, see below.
 
 # Keep Alive
 
@@ -49,11 +53,42 @@ I still have not found the reason why anybody would want to configure away the o
 
 While my unit is an [Easymeter Q3A](https://www.easymeter.com/downloads/products/zaehler/Q3A/BA_Q3A_V10.09_Rev19_2021-06-14.pdf), I believe there may be other types of meters with similar (stupid?) config options.
 
+# Modbus RTU Details
+
+The unit's address is fixed to 0x09. Function code 0x04 (Read Input Registers) is the only function code supported.
+
+Four values are exposed. Each value is a 32bit value, readable through two consecutive registers.
+
+| Address  | Content                                            | Unit | Data type               |
+|----------|----------------------------------------------------|------|-------------------------|
+| 256, 257 | Version number                                     |      | 32 bit unsigned integer |
+| 258, 259 | 1-0:1.8.0 Positive active energy (A+) total        | Wh   | 32 bit unsigned integer |
+| 260, 261 | 1-0:2.8.0 Negative active energy (A+) total        | Wh   | 32 bit unsigned integer |
+| 262, 263 | 1-0:16.7.0 Sum active instantaneous power (A+ - A-)| W    | 32 bit signed integer   |
+
+Example readout using "modpoll" (https://www.modbusdriver.com/modpoll.html):
+
+    modpoll -t 3:int -a 9 -0 -r 256 -c 4 -i -1 -b 115200 -s 2 COM6
+
+    modpoll -t 3:hex -a 9 -0 -r 258 -c 6    -1 -b 115200 -s 2 COM6
+
+The SML decoder accepts 64-bit raw values internally, but after application of the "scaler" it is expected that the resulting
+value fits into 32 bits. Indeed my unit always uses an 8-octet fixed-length zero-padded integer representation for all measurement
+values:
+
+    07 01 00 01 08 00 FF                1–0:1.8.0
+    62 1e                               Unit
+    52 03                               Scaler 10^3
+    59 00 00 00 01 18 CB 47 05          0x118CB4705 <=> 4710942469, scaled to 471094 Wh, displayed on the unit as 471 kWh
+
 # Caveats
 
 - The LED needs to cause a light stream of at least 400lux at the receiver. I found that a random LED flashlight that I "deconstructed" for the purpose worked nicely: Originally driven by 3x AAA, the LED seems to be OK with being driven by nearly 5V (at 100mA). Hence, I just used a small BC557 transistor with some base resistor, but no further resistor in series with the load. When installed just opposite the meter's receiver photo transistor things seem to be working reliably for me.
 - It might work with a series resistor to reach a lower current through the LED, but I have not yet tried that. By using a number of ATtiny ports in parallel it might be possible to get rid of the transistor, too.
+- (Update) I ended up using a constant-current circuit (http://www.loosweb.de/constant_current_sources/doc/en/index.html point 8)
 - The timing of this whole PIN entry scheme is not overly critical, but not certainly not fool-proof either. After all, it's intended for manual operation. Especially, the inter-digit delays may give you a problem. In this case, please adjust `DIGIT_GAP2_TICKS` in code and re-try.
-- If your meter happens to __not__ have a sticker preventing access to the MSB-DSS (IR transmitter/receiver, lucky you!), you want to check there first, as the MSB-DSS may well emit extended datagrams irrspectively of PIN entry status - that is, even without a PIN!
-- Why ATtiny841? Well, that was the nearest unit I happened to find on my workbench. And it's got two hardware serial ports, which I may use eventually to read the SML and to forward that via wired RS485, eventually. Of course, any Arduino-like microcontroller with some form of periodic interrupt should work.
+- If your meter happens to __not__ have a sticker preventing access to the MSB-DSS (IR transmitter/receiver, lucky you!), you want to check there first, as the MSB-DSS may well emit extended datagrams irrspective of PIN entry status - that is, even without a PIN!
+- Why ATtiny841? Well, that was the nearest unit I happened to find on my workbench. And it's got two hardware serial ports, which I use now to read the SML and forward that via wired RS485. Of course, for the basic LED flash function any Arduino-like microcontroller
+with some form of periodic interrupt should work.
 - Note that during the last seconds of the extended wait period, plus the seconds it takes to re-enter the PIN, the meter will send out reduced datagrams again. Please ping me when you know a way around this.
+- Please note that Modbus-RTU **requires** eleven bit times per character on the line. This means that when __not__ using any parity one must use **two** stop bits (start bit, 8 character bits, 2 stop bits == 11 bits). While some tools worked with just one stop bit  (modpoll), I found that others do not! Yes, especially PyModbus did rightfully **not** work unless the unit was configured to two stop bits. And that's critical as my HomeAssistant Modbus integration uses PyModbus under the covers.
