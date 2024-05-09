@@ -91,7 +91,8 @@ Notes:
 - Use a small 100nF blocking condensator as C5, and position that near the MCU
 - In the power supply section, I used 47uF/16V for C3, C4 which I had lying around. For the VBUS that I use a rating of 16V suffices, but please adapt when you supply with a higher voltage.
 - The infrared phototransistor L14G3 is __ancient__ and comes from my forgotten parts bin. See https://wiki.volkszaehler.org/howto/simpler_ir_leser for other devices that people have found to work OK.
-- The AMS1117-3v3 is on a small 3-pin module, which I just soldered in.
+- The RS485 module can be obtained from AliExpress, Ebay, Amazon, or https://www.makershop.de/module/kommunikation-module/ttl-rs485-adapter/
+- Same for the AMS1117-3V3 module. The 3-pin variant can be soldered easily and allows VBUS of up to 15V: https://www.berrybase.de/step-down-converter-5v-3-3v/800ma-mit-pin-header
 
 # Caveats
 
