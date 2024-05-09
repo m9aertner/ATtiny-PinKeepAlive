@@ -81,12 +81,23 @@ values:
     52 03                               Scaler 10^3
     59 00 00 00 01 18 CB 47 05          0x118CB4705 <=> 4710942469, scaled to 471094 Wh, displayed on the unit as 471 kWh
 
+# Schematic
+
+![Schematic](img/Schematic.png)
+
+Notes:
+
+- None of the values are critical, I believe.
+- Use a small 100nF blocking condensator as C5, and position that near the MCU
+- In the power supply section, I used 47uF/16V for C3, C4 which I had lying around. For the VBUS that I use a rating of 16V suffices, but please adapt when you supply with a higher voltage.
+- The infrared phototransistor L14G3 is __ancient__ and comes from my forgotten parts bin. See https://wiki.volkszaehler.org/howto/simpler_ir_leser for other devices that people have found to work OK.
+- The AMS1117-3v3 is on a small 3-pin module, which I just soldered in.
+
 # Caveats
 
-- The LED needs to cause a light stream of at least 400lux at the receiver. I found that a random LED flashlight that I "deconstructed" for the purpose worked nicely: Originally driven by 3x AAA, the LED seems to be OK with being driven by nearly 5V (at 100mA). Hence, I just used a small BC557 transistor with some base resistor, but no further resistor in series with the load. When installed just opposite the meter's receiver photo transistor things seem to be working reliably for me.
-- It might work with a series resistor to reach a lower current through the LED, but I have not yet tried that. By using a number of ATtiny ports in parallel it might be possible to get rid of the transistor, too.
-- (Update) I ended up using a constant-current circuit (http://www.loosweb.de/constant_current_sources/doc/en/index.html point 8)
-- The timing of this whole PIN entry scheme is not overly critical, but not certainly not fool-proof either. After all, it's intended for manual operation. Especially, the inter-digit delays may give you a problem. In this case, please adjust `DIGIT_GAP2_TICKS` in code and re-try.
+- The LED needs to cause a light stream of at least 400lux at the receiver. I found that a random LED flashlight that I "deconstructed" for the purpose worked nicely: Originally driven by 3x AAA, the LED seems to be OK with being driven by nearly 5V (at 100mA). I ended up using a constant-current circuit (http://www.loosweb.de/constant_current_sources/doc/en/index.html point 8) where the current is determined by the 50Ohms resistor (2x 100Ohms parallel is what I had). The flashing I get this way is strong enough for my meter.
+- (Update) Now that my meter emits long datagrams without any further ado, I simply disconnected the LED part and use the RS485 portion only.
+- The timing of this whole PIN entry scheme is not overly critical, but certainly not fool-proof either. After all, it's intended for manual operation. Especially, the inter-digit delays may give you a problem. In this case, please adjust `DIGIT_GAP2_TICKS` in code and re-try.
 - If your meter happens to __not__ have a sticker preventing access to the MSB-DSS (IR transmitter/receiver, lucky you!), you want to check there first, as the MSB-DSS may well emit extended datagrams irrspective of PIN entry status - that is, even without a PIN!
 - Why ATtiny841? Well, that was the nearest unit I happened to find on my workbench. And it's got two hardware serial ports, which I use now to read the SML and forward that via wired RS485. Of course, for the basic LED flash function any Arduino-like microcontroller
 with some form of periodic interrupt should work.
