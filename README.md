@@ -81,18 +81,26 @@ values:
     52 03                               Scaler 10^3
     59 00 00 00 01 18 CB 47 05          0x118CB4705 <=> 4710942469, scaled to 471094 Wh, displayed on the unit as 471 kWh
 
-# Schematic
+# Hardware Design
+
+I've prepared the schematics and a PCB using [KiCad 8.0.2](https://www.kicad.org/). Find respective project files under the [kicad/](kicad/) folder:
+* [kicad/PinKeepAlive.kicad_pcb](kicad/PinKeepAlive.kicad_pcb)
+* [kicad/PinKeepAlive.kicad_sch](kicad/PinKeepAlive.kicad_sch)
 
 ![Schematic](img/Schematic.png)
 
-Notes:
+![PCB](img/PCB.png)
+
+# Notes
 
 - None of the values are critical, I believe.
 - Use a small 100nF blocking condensator as C5, and position that near the MCU
 - In the power supply section, I used 47uF/16V for C3, C4 which I had lying around. For the VBUS that I use a rating of 16V suffices, but please adapt when you supply with a higher voltage.
 - The infrared phototransistor L14G3 is __ancient__ and comes from my forgotten parts bin. See https://wiki.volkszaehler.org/howto/simpler_ir_leser for other devices that people have found to work OK.
+- By way of connector J6, you can also add a normal UART SmartMeterReader (e.g. [Amazon](https://www.amazon.de/bitShake-SmartMeterReader-UART-IR-Lesekopf/dp/B09XRC6VYW)). No need to populate U2, R4, R5, Q2 in this case, of course.
 - The RS485 module can be obtained from AliExpress, Ebay, Amazon, or https://www.makershop.de/module/kommunikation-module/ttl-rs485-adapter/
 - Same for the AMS1117-3V3 module. The 3-pin variant can be soldered easily and allows VBUS of up to 15V: https://www.berrybase.de/step-down-converter-5v-3-3v/800ma-mit-pin-header
+- For the very short RS485 cable that I use, no 120 Ohm termination resistor is required. For longer cable lengths, be sure to terminate the RS485 bus at either end, usually by closing a solder bridge on the RS485 module.
 
 # Caveats
 

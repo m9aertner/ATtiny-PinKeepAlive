@@ -4,4 +4,10 @@ testdata
 test
 debug.h
 test-sml
-kicad
+
+kicad/PinKeepAlive-backups/
+kicad/fp-info-cache
+kicad/fp-lib-table
+kicad/*.zip
+kicad/sym-lib-table
+
