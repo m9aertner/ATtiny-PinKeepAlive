@@ -91,13 +91,15 @@ I've prepared the schematics and a PCB using [KiCad 8.0.2](https://www.kicad.org
 
 ![PCB](img/PCB.png)
 
+![Installation](img/DSC05109.JPG)
+
 # Notes
 
 - None of the values are critical, I believe.
 - Use a small 100nF blocking condensator as C5, and position that near the MCU
 - In the power supply section, I used 47uF/16V for C3, C4 which I had lying around. For the VBUS that I use a rating of 16V suffices, but please adapt when you supply with a higher voltage.
 - The infrared phototransistor L14G3 is __ancient__ and comes from my forgotten parts bin. See https://wiki.volkszaehler.org/howto/simpler_ir_leser for other devices that people have found to work OK.
-- By way of connector J6, you can also add a normal UART SmartMeterReader (e.g. [Amazon](https://www.amazon.de/bitShake-SmartMeterReader-UART-IR-Lesekopf/dp/B09XRC6VYW)). No need to populate U2, R4, R5, Q2 in this case, of course.
+- By way of connector J6, you can also add a normal UART SmartMeterReader (e.g. [Amazon](https://www.amazon.de/bitShake-SmartMeterReader-UART-IR-Lesekopf/dp/B09XRC6VYW)). That's how I have it running currently. No need to populate U2, R4, R5, Q2 in this case, of course.
 - The RS485 module can be obtained from AliExpress, Ebay, Amazon, or https://www.makershop.de/module/kommunikation-module/ttl-rs485-adapter/
 - Same for the AMS1117-3V3 module. The 3-pin variant can be soldered easily and allows VBUS of up to 15V: https://www.berrybase.de/step-down-converter-5v-3-3v/800ma-mit-pin-header
 - For the very short RS485 cable that I use, no 120 Ohm termination resistor is required. For longer cable lengths, be sure to terminate the RS485 bus at either end, usually by closing a solder bridge on the RS485 module.
@@ -105,7 +107,7 @@ I've prepared the schematics and a PCB using [KiCad 8.0.2](https://www.kicad.org
 # Caveats
 
 - The LED needs to cause a light stream of at least 400lux at the receiver. I found that a random LED flashlight that I "deconstructed" for the purpose worked nicely: Originally driven by 3x AAA, the LED seems to be OK with being driven by nearly 5V (at 100mA). I ended up using a constant-current circuit (http://www.loosweb.de/constant_current_sources/doc/en/index.html point 8) where the current is determined by the 50Ohms resistor (2x 100Ohms parallel is what I had). The flashing I get this way is strong enough for my meter.
-- (Update) Now that my meter emits long datagrams without any further ado, I simply disconnected the LED part and use the RS485 portion only.
+- (Update) Now that my meter emits long datagrams without any further ado, I converted the LED part to a "heartbeat" by configuring away the PIN and setting a 60 second keep-alive interval. The main objective now is to use the RS485 portion.
 - The timing of this whole PIN entry scheme is not overly critical, but certainly not fool-proof either. After all, it's intended for manual operation. Especially, the inter-digit delays may give you a problem. In this case, please adjust `DIGIT_GAP2_TICKS` in code and re-try.
 - If your meter happens to __not__ have a sticker preventing access to the MSB-DSS (IR transmitter/receiver, lucky you!), you want to check there first, as the MSB-DSS may well emit extended datagrams irrspective of PIN entry status - that is, even without a PIN!
 - Why ATtiny841? Well, that was the nearest unit I happened to find on my workbench. And it's got two hardware serial ports, which I use now to read the SML and forward that via wired RS485. Of course, for the basic LED flash function any Arduino-like microcontroller
